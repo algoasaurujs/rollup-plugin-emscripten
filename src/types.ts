@@ -1,0 +1,1 @@
+export type OutputConfig = 'file' | 'base64';
