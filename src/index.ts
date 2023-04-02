@@ -1,6 +1,6 @@
 import { PluginImpl } from 'rollup';
 import { compileToWasm } from './utils/compileToWasm';
-import { OutputConfig } from './types';
+import { OutputConfig, OutputMode } from './types';
 import saveFile from './utils/saveFile';
 import {
   nodejsAsyncBase64,
@@ -15,12 +15,12 @@ import {
   browserSyncFile,
 } from './templates/browser';
 import { bothAsyncBase64, bothSyncBase64 } from './templates/both';
-import path from "path";
-import fs from "fs";
+import path from 'path';
+import typeDeclaration from './templates/typeDeclaration';
 
 interface Options {
   target: 'node' | 'browser' | 'both';
-  mode: 'sync' | 'async';
+  mode: OutputMode;
   output: OutputConfig;
 }
 
@@ -38,28 +38,19 @@ export const emscriptenLoader: PluginImpl<Partial<Options>> = options => {
       const inputPaths = options.input;
       if (Array.isArray(inputPaths)) {
         inputPaths.forEach(i => {
-          console.log(path.dirname(i))
-        })
+          const root = path.dirname(i);
+          typeDeclaration(root, settings.mode);
+        });
       } else {
         const root = path.dirname(Object.values(inputPaths).join(''));
-        fs.writeFile(path.join(root,'global.d.ts'), 
-        `
-        type LoaderResult<Exports> = import('@algoasaurujs/wasm-loader').LoaderResult<
-  Exports
->;
-
-declare module '*.c' {
-  function loader<Exports = any, Imports = any>(
-    importObject?: Imports
-  ): LoaderResult<Exports>;
-  export = loader;
-}
-        `
-        ,(err)=>{console.log(err)})
+        typeDeclaration(root, settings.mode);
       }
     },
     async transform(code, id) {
-      const fileExtension = id.split('.').at(-1)?.toLowerCase();
+      const fileExtension = id
+        .split('.')
+        .at(-1)
+        ?.toLowerCase();
       if (fileExtension === 'c' || fileExtension === 'cpp') {
         const { target, mode, output } = settings;
         const isWatchMode = this.meta.watchMode;
