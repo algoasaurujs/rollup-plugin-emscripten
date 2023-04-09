@@ -19,6 +19,7 @@ import path from 'path';
 import typeDeclaration from './templates/typeDeclaration';
 
 interface Options {
+  baseDirectory: string;
   target: 'node' | 'browser' | 'both';
   mode: OutputMode;
   output: OutputConfig;
@@ -26,6 +27,7 @@ interface Options {
 
 export const emscriptenLoader: PluginImpl<Partial<Options>> = options => {
   const settings: Options = {
+    baseDirectory:'./src',
     target: 'both',
     mode: 'sync',
     output: 'base64',
@@ -34,17 +36,9 @@ export const emscriptenLoader: PluginImpl<Partial<Options>> = options => {
 
   return {
     name: 'rollup-plugin-emscripten', // this name will show up in warnings and errors
-    buildStart(options) {
-      const inputPaths = options.input;
-      if (Array.isArray(inputPaths)) {
-        inputPaths.forEach(i => {
-          const root = path.dirname(i);
-          typeDeclaration(root, settings.mode);
-        });
-      } else {
-        const root = path.dirname(Object.values(inputPaths).join(''));
-        typeDeclaration(root, settings.mode);
-      }
+    buildStart() {
+      const root = path.join(path.resolve(process.cwd()), settings.baseDirectory);
+      typeDeclaration(root, settings.mode);
     },
     async transform(code, id) {
       const fileExtension = id

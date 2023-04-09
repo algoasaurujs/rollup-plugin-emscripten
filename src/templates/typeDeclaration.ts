@@ -8,17 +8,17 @@ const typeDeclaration = (rootPath: string, mode: OutputMode) => {
     fs.writeFile(
       typeFile,
       `
-      type LoaderResult<Exports> = import('@algoasaurujs/wasm-loader').LoaderResult<Exports>;
+type LoaderResult<Exports> = import('@algoasaurujs/wasm-loader').LoaderResult<Exports>;
 
-      declare module '*.c' {
-        function loader<Exports = any, Imports = any>(importObject?: Imports): LoaderResult<Exports>;
-        export = loader;
-      }
+declare module '*.c' {
+  function loader<Exports = any, Imports = any>(importObject?: Imports): LoaderResult<Exports>;
+  export = loader;
+}
 
-      declare module '*.cpp' {
-        function loader<Exports = any, Imports = any>(importObject?: Imports): LoaderResult<Exports>;
-        export = loader;
-      }
+declare module '*.cpp' {
+  function loader<Exports = any, Imports = any>(importObject?: Imports): LoaderResult<Exports>;
+  export = loader;
+}
       `,
       err => {
         console.log(err);
